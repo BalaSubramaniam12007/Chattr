@@ -28,8 +28,11 @@ function ChatWindow({ conversation }) {
           filter: `conversation_id=eq.${conversation.id}`,
         },
         (payload) => {
-          setMessages((current) => [...current, payload.new]);
-          scrollToBottom();
+          // Only add the message if it's not from the current user
+          if (payload.new.sender_id !== user.id) {
+            setMessages((current) => [...current, payload.new]);
+            scrollToBottom();
+          }
         }
       )
       .subscribe();
@@ -61,16 +64,40 @@ function ChatWindow({ conversation }) {
     if (!newMessage.trim()) return;
 
     try {
-      const { error } = await supabase.from('messages').insert({
+      const newMsg = {
         conversation_id: conversation.id,
         sender_id: user.id,
         content: newMessage.trim(),
-      });
+        created_at: new Date().toISOString(),
+      };
+
+      // Optimistically add the message to the UI
+      setMessages((current) => [...current, newMsg]);
+      setNewMessage('');
+      scrollToBottom();
+
+      // Send to Supabase
+      const { error, data } = await supabase
+        .from('messages')
+        .insert(newMsg)
+        .select()
+        .single();
 
       if (error) throw error;
-      setNewMessage('');
+
+      // Update the temporary message with the real one from the database
+      setMessages((current) =>
+        current.map((msg) =>
+          msg === newMsg ? data : msg
+        )
+      );
     } catch (error) {
       console.error('Error sending message:', error);
+      // Remove the temporary message if there was an error
+      setMessages((current) =>
+        current.filter((msg) => msg !== newMsg)
+      );
+      alert('Failed to send message');
     }
   };
 
@@ -93,8 +120,11 @@ function ChatWindow({ conversation }) {
         ) : messages.length === 0 ? (
           <div className="text-center text-gray-500">No messages yet</div>
         ) : (
-          messages.map((message) => (
-            <ChatMessage key={message.id} message={message} />
+          messages.map((message, index) => (
+            <ChatMessage 
+              key={message.id || index} 
+              message={message} 
+            />
           ))
         )}
         <div ref={messagesEndRef} />
