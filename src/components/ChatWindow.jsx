@@ -6,6 +6,7 @@ import ChatMessage from './ChatMessage';
 
 function ChatWindow({ conversation }) {
   const { user } = useAuth();
+  const [profile, setProfile] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -101,17 +102,30 @@ function ChatWindow({ conversation }) {
     }
   };
 
+  const getAvatarUrl = (profile) => {
+    return profile?.avatar_url || "./public/cat.png";
+  };
+
   return (
-    <div className="flex flex-col h-[600px] bg-white rounded-lg shadow">
-      {/* Chat Header */}
-      <div className="p-4 border-b">
-        <h3 className="text-lg font-semibold">
-          Chat with{' '}
-          {conversation.user1.id === user.id
-            ? conversation.user2.username
-            : conversation.user1.username}
-        </h3>
-      </div>
+    <div className="flex flex-col h-[850px] bg-white rounded-lg shadow">
+      <div className="p-4 flex items-center">
+  {/* Profile Image */}
+  <img
+    src={getAvatarUrl(profile)}
+    alt={profile?.username || 'Profile'}
+    className="w-12 h-12 rounded-full hover:ring-2 hover:ring-blue-500"
+  />
+  
+  {/* Chat Header */}
+  <div className="ml-4">
+    <h3 className="text-lg font-bold text-gray-800">
+      {conversation.user1.id === user.id
+        ? conversation.user2.username
+        : conversation.user1.username}
+    </h3>
+  </div>
+</div>
+
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4">
