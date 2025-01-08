@@ -1,5 +1,7 @@
+// ChatMessage.jsx
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { Check, CheckCheck } from 'lucide-react';
 
 const ChatMessage = ({ message }) => {
   const { user } = useAuth();
@@ -21,7 +23,6 @@ const ChatMessage = ({ message }) => {
     });
   };
 
-
   return (
     <div className={`flex ${isOwner ? 'justify-end' : 'justify-start'} mb-3 px-2 sm:px-4`}>
       <div className="flex flex-col max-w-[85%] sm:max-w-[75%] md:max-w-[65%]">
@@ -35,7 +36,20 @@ const ChatMessage = ({ message }) => {
           <p className="text-sm sm:text-base whitespace-pre-wrap break-words">
             {message.content}
           </p>
-        
+        </div>
+        <div className="flex items-center justify-end space-x-1 mt-0.5">
+          <span className="text-xs text-gray-500">
+            {formatTime(message.created_at)}
+          </span>
+          {isOwner && (
+            <span className="flex items-center text-xs">
+              {message.read ? (
+                <CheckCheck className="w-4 h-4 text-blue-500" />
+              ) : (
+                <Check className="w-4 h-4 text-gray-400" />
+              )}
+            </span>
+          )}
         </div>
       </div>
     </div>
