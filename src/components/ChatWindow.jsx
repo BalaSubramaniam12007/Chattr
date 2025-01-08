@@ -1,38 +1,72 @@
 // src/components/ChatWindow.jsx
-import { useState, useEffect, useRef } from 'react';
-import { supabase } from '../utils/supabase';
-import { useAuth } from '../contexts/AuthContext';
-import ChatMessage from './ChatMessage';
+import { useState, useEffect, useRef } from "react";
+import { supabase } from "../utils/supabase";
+import { useAuth } from "../contexts/AuthContext";
+import ChatMessage from "./ChatMessage";
 
 function ChatWindow({ conversation }) {
   const { user } = useAuth();
-  const [profile, setProfile] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
+  const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
-
+  const [otherUser, setOtherUser] = useState(null);
+  
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  useEffect(() => {
+    const other = conversation.user1.id === user.id ? conversation.user2 : conversation.user1;
+    setOtherUser(other);
+  }, [conversation, user.id]);
+
+  // Mark messages as read when they become visible
+  useEffect(() => {
+    const markMessagesAsRead = async () => {
+      const unreadMessages = messages.filter(
+        msg => msg.sender_id !== user.id && !msg.read
+      );
+
+      if (unreadMessages.length > 0) {
+        const { error } = await supabase
+          .from('messages')
+          .update({ read: true })
+          .in('id', unreadMessages.map(msg => msg.id));
+
+        if (error) {
+          console.error('Error marking messages as read:', error);
+        }
+      }
+    };
+
+    markMessagesAsRead();
+  }, [messages, user.id]);
 
   useEffect(() => {
     fetchMessages();
     const messagesSubscription = supabase
       .channel(`messages:${conversation.id}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
+          event: "*", // Listen to all changes (INSERT, UPDATE, DELETE)
+          schema: "public",
+          table: "messages",
           filter: `conversation_id=eq.${conversation.id}`,
         },
         (payload) => {
-          // Only add the message if it's not from the current user
-          if (payload.new.sender_id !== user.id) {
-            setMessages((current) => [...current, payload.new]);
-            scrollToBottom();
+          if (payload.eventType === 'INSERT') {
+            if (payload.new.sender_id !== user.id) {
+              setMessages((current) => [...current, payload.new]);
+              scrollToBottom();
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            setMessages((current) =>
+              current.map((msg) =>
+                msg.id === payload.new.id ? payload.new : msg
+              )
+            );
           }
         }
       )
@@ -46,17 +80,17 @@ function ChatWindow({ conversation }) {
   const fetchMessages = async () => {
     try {
       const { data, error } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('conversation_id', conversation.id)
-        .order('created_at', { ascending: true });
+        .from("messages")
+        .select("*")
+        .eq("conversation_id", conversation.id)
+        .order("created_at", { ascending: true });
 
       if (error) throw error;
       setMessages(data || []);
       setLoading(false);
       scrollToBottom();
     } catch (error) {
-      console.error('Error fetching messages:', error);
+      console.error("Error fetching messages:", error);
     }
   };
 
@@ -70,37 +104,35 @@ function ChatWindow({ conversation }) {
         sender_id: user.id,
         content: newMessage.trim(),
         created_at: new Date().toISOString(),
+        read: false
       };
 
       // Optimistically add the message to the UI
       setMessages((current) => [...current, newMsg]);
-      setNewMessage('');
+      setNewMessage("");
       scrollToBottom();
 
       // Send to Supabase
       const { error, data } = await supabase
-        .from('messages')
+        .from("messages")
         .insert(newMsg)
         .select()
         .single();
 
       if (error) throw error;
 
-      // Update the temporary message with the real one from the database
+       // Update the temporary message with the real one from the database
       setMessages((current) =>
-        current.map((msg) =>
-          msg === newMsg ? data : msg
-        )
+        current.map((msg) => (msg === newMsg ? data : msg))
       );
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error("Error sending message:", error);
       // Remove the temporary message if there was an error
-      setMessages((current) =>
-        current.filter((msg) => msg !== newMsg)
-      );
-      alert('Failed to send message');
+      setMessages((current) => current.filter((msg) => msg !== newMsg));
+      alert("Failed to send message");
     }
   };
+
 
   const getAvatarUrl = (profile) => {
     return profile?.avatar_url || "./public/cat.png";
@@ -109,23 +141,22 @@ function ChatWindow({ conversation }) {
   return (
     <div className="flex flex-col h-[850px] bg-white rounded-lg shadow">
       <div className="p-4 flex items-center">
-  {/* Profile Image */}
-  <img
-    src={getAvatarUrl(profile)}
-    alt={profile?.username || 'Profile'}
-    className="w-12 h-12 rounded-full hover:ring-2 hover:ring-blue-500"
-  />
-  
-  {/* Chat Header */}
-  <div className="ml-4">
-    <h3 className="text-lg font-bold text-gray-800">
-      {conversation.user1.id === user.id
-        ? conversation.user2.username
-        : conversation.user1.username}
-    </h3>
-  </div>
-</div>
+        {/* Profile Image */}
+        <img
+          src={getAvatarUrl(otherUser)}
+          alt={otherUser?.username || "Profile"}
+          className="w-12 h-12 rounded-full hover:ring-2 hover:ring-blue-500"
+        />
 
+        {/* Chat Header */}
+        <div className="ml-4">
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-bold text-gray-800">
+              {otherUser?.username}
+            </h3>
+          </div>
+        </div>
+      </div>
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4">
@@ -135,10 +166,7 @@ function ChatWindow({ conversation }) {
           <div className="text-center text-gray-500">No messages yet</div>
         ) : (
           messages.map((message, index) => (
-            <ChatMessage 
-              key={message.id || index} 
-              message={message} 
-            />
+            <ChatMessage key={message.id || index} message={message} />
           ))
         )}
         <div ref={messagesEndRef} />
