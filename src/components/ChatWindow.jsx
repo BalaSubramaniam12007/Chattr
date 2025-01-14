@@ -133,43 +133,56 @@ function ChatWindow({ conversation, isOnline }) {
   };
 
   return (
-    <div className="flex flex-col h-[850px] bg-white rounded-lg shadow">
-            <div className="p-4 flex items-center justify-between">
+    <div className="flex flex-col bg-white rounded-lg shadow h-screen">
+      {/* Header Section */}
+      <div className="p-4 flex items-center justify-between border-b">
         <div className="flex items-center">
           <img
             src={getAvatarUrl(otherUser)}
             alt={otherUser?.username || "Profile"}
             className="w-12 h-12 rounded-full hover:ring-2 hover:ring-blue-500"
           />
-
           <div className="ml-4">
             <h3 className="text-lg font-bold text-gray-800">
               {otherUser?.username}
             </h3>
             <div className="flex items-center mt-1">
-              <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
+              <div
+                className={`w-2 h-2 rounded-full ${
+                  isOnline ? "bg-green-500" : "bg-gray-400"
+                }`}
+              />
               <span className="ml-1 text-sm text-gray-500">
-                {isOnline ? 'Active' : 'Offline'}
+                {isOnline ? "Active" : "Offline"}
               </span>
             </div>
           </div>
         </div>
       </div>
-
-      <div className="flex-1 overflow-y-auto p-4">
-        {loading ? (
-          <div className="text-center">Loading messages...</div>
-        ) : messages.length === 0 ? (
-          <div className="text-center text-gray-500">No messages yet</div>
-        ) : (
-          messages.map((message, index) => (
-            <ChatMessage key={message.id || index} message={message} />
-          ))
-        )}
-        <div ref={messagesEndRef} />
+  
+      {/* Messages Section */}
+      <div className="flex-1 overflow-y-auto p-4" style={{ overflow: "hidden" }}>
+        <div className="relative h-full">
+          <div className="absolute inset-0 overflow-y-auto">
+            {loading ? (
+              <div className="text-center">Loading messages...</div>
+            ) : messages.length === 0 ? (
+              <div className="text-center text-gray-500">No messages yet</div>
+            ) : (
+              messages.map((message, index) => (
+                <ChatMessage key={message.id || index} message={message} />
+              ))
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+        </div>
       </div>
-
-      <form onSubmit={sendMessage} className="border-t p-4">
+  
+      {/* Input Section */}
+      <form
+        onSubmit={sendMessage}
+        className="border-t p-4 bg-gray-100 sticky bottom-0 z-10"
+      >
         <div className="flex space-x-2">
           <input
             type="text"
@@ -189,6 +202,7 @@ function ChatWindow({ conversation, isOnline }) {
       </form>
     </div>
   );
+  
 }
 
 export default ChatWindow;
