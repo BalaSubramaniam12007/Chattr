@@ -1,12 +1,14 @@
 // src/contexts/AuthContext.jsx
 import { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../utils/supabase';
+import { useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext({});
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Check active sessions
@@ -18,6 +20,10 @@ export function AuthProvider({ children }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      if (!session) {
+        // Cleanup all Supabase realtime subscriptions when session ends
+        supabase.removeAllChannels();
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -40,8 +46,20 @@ export function AuthProvider({ children }) {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    try {
+      // First, remove all realtime subscriptions
+      await supabase.removeAllChannels();
+      
+      // Then sign out
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      // Navigate to login page
+      navigate('/');
+    } catch (error) {
+      console.error('Error during sign out:', error);
+      throw error;
+    }
   };
 
   const value = {
