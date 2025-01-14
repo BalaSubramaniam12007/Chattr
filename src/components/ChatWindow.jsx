@@ -1,10 +1,10 @@
-// src/components/ChatWindow.jsx
+// ChatWindow.jsx
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "../utils/supabase";
 import { useAuth } from "../contexts/AuthContext";
 import ChatMessage from "./ChatMessage";
 
-function ChatWindow({ conversation }) {
+function ChatWindow({ conversation, isOnline }) {
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
@@ -21,7 +21,6 @@ function ChatWindow({ conversation }) {
     setOtherUser(other);
   }, [conversation, user.id]);
 
-  // Mark messages as read when they become visible
   useEffect(() => {
     const markMessagesAsRead = async () => {
       const unreadMessages = messages.filter(
@@ -50,7 +49,7 @@ function ChatWindow({ conversation }) {
       .on(
         "postgres_changes",
         {
-          event: "*", // Listen to all changes (INSERT, UPDATE, DELETE)
+          event: "*",
           schema: "public",
           table: "messages",
           filter: `conversation_id=eq.${conversation.id}`,
@@ -107,12 +106,10 @@ function ChatWindow({ conversation }) {
         read: false
       };
 
-      // Optimistically add the message to the UI
       setMessages((current) => [...current, newMsg]);
       setNewMessage("");
       scrollToBottom();
 
-      // Send to Supabase
       const { error, data } = await supabase
         .from("messages")
         .insert(newMsg)
@@ -121,18 +118,15 @@ function ChatWindow({ conversation }) {
 
       if (error) throw error;
 
-       // Update the temporary message with the real one from the database
       setMessages((current) =>
         current.map((msg) => (msg === newMsg ? data : msg))
       );
     } catch (error) {
       console.error("Error sending message:", error);
-      // Remove the temporary message if there was an error
       setMessages((current) => current.filter((msg) => msg !== newMsg));
       alert("Failed to send message");
     }
   };
-
 
   const getAvatarUrl = (profile) => {
     return profile?.avatar_url || "./public/cat.png";
@@ -140,25 +134,30 @@ function ChatWindow({ conversation }) {
 
   return (
     <div className="flex flex-col h-[850px] bg-white rounded-lg shadow">
-      <div className="p-4 flex items-center">
-        {/* Profile Image */}
-        <img
-          src={getAvatarUrl(otherUser)}
-          alt={otherUser?.username || "Profile"}
-          className="w-12 h-12 rounded-full hover:ring-2 hover:ring-blue-500"
-        />
+      <div className="p-4 flex items-center justify-between">
+        <div className="flex items-center">
+          <img
+            src={getAvatarUrl(otherUser)}
+            alt={otherUser?.username || "Profile"}
+            className="w-12 h-12 rounded-full hover:ring-2 hover:ring-blue-500"
+          />
 
-        {/* Chat Header */}
-        <div className="ml-4">
-          <div className="flex items-center gap-2">
-            <h3 className="text-lg font-bold text-gray-800">
-              {otherUser?.username}
-            </h3>
+          <div className="ml-4">
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-bold text-gray-800">
+                {otherUser?.username}
+              </h3>
+              <div className="flex items-center">
+                <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
+                <span className="ml-1 text-sm text-gray-500">
+                  {isOnline ? 'Online' : 'Offline'}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4">
         {loading ? (
           <div className="text-center">Loading messages...</div>
@@ -172,7 +171,6 @@ function ChatWindow({ conversation }) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Message Input */}
       <form onSubmit={sendMessage} className="border-t p-4">
         <div className="flex space-x-2">
           <input
