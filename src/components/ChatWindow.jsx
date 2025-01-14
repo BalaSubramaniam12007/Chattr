@@ -134,7 +134,7 @@ function ChatWindow({ conversation, isOnline }) {
 
   return (
     <div className="flex flex-col h-[850px] bg-white rounded-lg shadow">
-      <div className="p-4 flex items-center justify-between">
+            <div className="p-4 flex items-center justify-between">
         <div className="flex items-center">
           <img
             src={getAvatarUrl(otherUser)}
@@ -143,16 +143,14 @@ function ChatWindow({ conversation, isOnline }) {
           />
 
           <div className="ml-4">
-            <div className="flex items-center gap-2">
-              <h3 className="text-lg font-bold text-gray-800">
-                {otherUser?.username}
-              </h3>
-              <div className="flex items-center">
-                <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
-                <span className="ml-1 text-sm text-gray-500">
-                  {isOnline ? 'Online' : 'Offline'}
-                </span>
-              </div>
+            <h3 className="text-lg font-bold text-gray-800">
+              {otherUser?.username}
+            </h3>
+            <div className="flex items-center mt-1">
+              <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
+              <span className="ml-1 text-sm text-gray-500">
+                {isOnline ? 'Active' : 'Offline'}
+              </span>
             </div>
           </div>
         </div>
