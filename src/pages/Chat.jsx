@@ -208,18 +208,20 @@ function Chat() {
           </div>
 
           <div className="w-1/3">
-            <ConversationList
-              conversations={filteredConversations}
-              activeConversation={activeConversation}
-              onSelect={setActiveConversation}
-              onNewChat={() => setShowNewChat(!showNewChat)}
-              onSearch={handleSearch}
-              showNewChat={showNewChat}
-              users={users}
-              onStartNewConversation={startNewConversation}
-              currentUserId={user.id}
-              onlineUsers={onlineUsers}
-            />
+            <div className="bg-white rounded-lg shadow-sm h-[850px]">
+              <ConversationList
+                conversations={filteredConversations}
+                activeConversation={activeConversation}
+                onSelect={setActiveConversation}
+                onNewChat={() => setShowNewChat(!showNewChat)}
+                onSearch={handleSearch}
+                showNewChat={showNewChat}
+                users={users}
+                onStartNewConversation={startNewConversation}
+                currentUserId={user.id}
+                onlineUsers={onlineUsers}
+              />
+            </div>
           </div>
 
           <div className="w-2/3">
