@@ -5,6 +5,7 @@ import { supabase } from '../utils/supabase';
 import ChatWindow from '../components/ChatWindow';
 import UserProfilesBar from '../components/UserProfilesBar';
 import ConversationList from '../components/ConversationList';
+import { ArrowLeft } from 'lucide-react';
 
 function Chat() {
   const { user, signOut } = useAuth();
@@ -15,6 +16,15 @@ function Chat() {
   const [showNewChat, setShowNewChat] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [onlineUsers, setOnlineUsers] = useState(new Set());
+  const [isMobileView, setIsMobileView] = useState(window.innerWidth < 1024);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileView(window.innerWidth < 1024);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     fetchConversations();
@@ -189,7 +199,8 @@ function Chat() {
 
   return (
     <div className="min-h-screen bg-gray-100"> 
-      <nav className="bg-white shadow-sm">
+    {/*Desktop header*/}
+      <nav className="bg-white shadow-sm hidden lg:block">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-xl font-bold">Chattr</h1>
           <button
@@ -200,14 +211,44 @@ function Chat() {
           </button>
         </div>
       </nav>
+      {/* Mobile Header */}
+      <nav className="bg-white shadow-sm lg:hidden">
+        <div className="px-4 py-4 flex justify-between items-center">
+          {activeConversation && isMobileView ? (
+            <>
+              <button
+                onClick={() => setActiveConversation(null)}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <ArrowLeft size={24} />
+              </button>
+              <span className="font-semibold">{
+                activeConversation.user1.id === user.id 
+                  ? activeConversation.user2.username 
+                  : activeConversation.user1.username
+              }</span>
+            </>
+          ) : (
+            <>
+              <h1 className="text-xl font-bold">Chattr</h1>
+              <UserProfilesBar />
+            </>
+          )}
+        </div>
+      </nav>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex gap-4">
-          <div className="w-30 bg-white rounded-lg shadow-sm">
+          {/* UserProfilesBar - Only visible on desktop */}
+          <div className="hidden lg:block w-30 bg-white rounded-lg shadow-sm">
             <UserProfilesBar />
           </div>
 
-          <div className="w-1/3">
+          {/* ConversationList - Full width on mobile when no active chat */}
+          <div className={`
+            ${isMobileView ? 'w-full' : 'w-1/3'} 
+            ${activeConversation && isMobileView ? 'hidden' : 'block'}
+          `}>
             <div className="bg-white rounded-lg shadow-sm h-[850px]">
               <ConversationList
                 conversations={filteredConversations}
@@ -224,7 +265,11 @@ function Chat() {
             </div>
           </div>
 
-          <div className="w-2/3">
+          {/* ChatWindow - Full width on mobile when active */}
+          <div className={`
+            ${isMobileView ? 'w-full' : 'w-2/3'}
+            ${!activeConversation && isMobileView ? 'hidden' : 'block'}
+          `}>
             {activeConversation ? (
               <ChatWindow 
                 conversation={activeConversation} 
