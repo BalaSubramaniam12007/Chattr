@@ -1,3 +1,4 @@
+// Chat.jsx
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../utils/supabase';
@@ -13,11 +14,88 @@ function Chat() {
   const [loading, setLoading] = useState(true);
   const [showNewChat, setShowNewChat] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-
+  const [onlineUsers, setOnlineUsers] = useState(new Set());
 
   useEffect(() => {
     fetchConversations();
     fetchUsers();
+    const cleanupPresence = setupPresenceChannel();
+  
+    return () => {
+      if (cleanupPresence) {
+        cleanupPresence();
+      }
+    };
+  }, [user]);
+
+  const setupPresenceChannel = () => {
+    const channel = supabase.channel('online_users');
+  
+    // First, define the cleanup function
+    const cleanup = async () => {
+      try {
+        await channel.untrack();
+        await channel.unsubscribe();
+      } catch (error) {
+        console.error('Error cleaning up presence channel:', error);
+      }
+    };
+  
+    // Then your existing channel setup code
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState();
+        const onlineUserIds = new Set(
+          Object.values(state)
+            .flat()
+            .map(presence => presence.user_id)
+        );
+        setOnlineUsers(onlineUserIds);
+      })
+      .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+        setOnlineUsers(prevUsers => {
+          const newSet = new Set(prevUsers);
+          newPresences.forEach(presence => newSet.add(presence.user_id));
+          return newSet;
+        });
+      })
+      .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+        setOnlineUsers(prevUsers => {
+          const newSet = new Set(prevUsers);
+          leftPresences.forEach(presence => newSet.delete(presence.user_id));
+          return newSet;
+        });
+      });
+  
+    channel.subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') {
+        await channel.track({
+          user_id: user.id,
+          online_at: new Date().toISOString(),
+        });
+      }
+    });
+  
+    // Add these lines at the end of setupPresenceChannel
+    window.addEventListener('beforeunload', cleanup);
+  
+    return () => {
+      cleanup();
+      window.removeEventListener('beforeunload', cleanup);
+    };
+  };
+  
+  // Then in your useEffect, make sure to use the cleanup function:
+  useEffect(() => {
+    fetchConversations();
+    fetchUsers();
+    const cleanupPresence = setupPresenceChannel();
+  
+    return () => {
+      if (cleanupPresence) {
+        cleanupPresence();
+      }
+    };
   }, [user]);
 
   const fetchConversations = async () => {
@@ -106,11 +184,9 @@ function Chat() {
     </div>;
   }
 
-  
 
   return (
     <div className="min-h-screen bg-gray-100"> 
-      {/* Navigation */}
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-xl font-bold">Chattr</h1>
@@ -123,15 +199,12 @@ function Chat() {
         </div>
       </nav>
 
-      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex gap-4">
-          {/* Profile Bar */}
           <div className="w-30 bg-white rounded-lg shadow-sm">
             <UserProfilesBar />
           </div>
 
-          {/* Conversations List */}
           <div className="w-1/3">
             <ConversationList
               conversations={filteredConversations}
@@ -143,17 +216,25 @@ function Chat() {
               users={users}
               onStartNewConversation={startNewConversation}
               currentUserId={user.id}
+              onlineUsers={onlineUsers}
             />
           </div>
 
-          {/* Chat Window */}
           <div className="w-2/3">
             {activeConversation ? (
-              <ChatWindow conversation={activeConversation} />
+              <ChatWindow 
+                conversation={activeConversation} 
+                isOnline={onlineUsers.has(
+                  activeConversation.user1_id === user.id 
+                    ? activeConversation.user2_id 
+                    : activeConversation.user1_id
+                )} 
+              />
             ) : (
               <div className="h-[850px] bg-white rounded-lg shadow flex items-center justify-center">
                 <p className="text-gray-500">
-                  Select a conversation or start a new one</p>
+                  Select a conversation or start a new one
+                </p>
               </div>
             )}
           </div>
