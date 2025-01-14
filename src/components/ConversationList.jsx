@@ -9,7 +9,8 @@ function ConversationList({
   showNewChat,
   users,
   onStartNewConversation,
-  currentUserId
+  currentUserId,
+  onlineUsers
 }) {
   return (
     <div className="bg-white rounded-lg shadow p-4">
@@ -40,9 +41,26 @@ function ConversationList({
               <button
                 key={otherUser.id}
                 onClick={() => onStartNewConversation(otherUser.id)}
-                className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded"
+                className="w-full flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
               >
-                {otherUser.username}
+                <div className="relative">
+                  <img
+                    src={otherUser.avatar_url || 'Chattr/bg.jpeg'}
+                    alt="Profile"
+                    className="w-12 h-12 rounded-full border border-gray-300"
+                  />
+                  <span
+                    className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
+                      onlineUsers?.has(otherUser.id) ? 'bg-green-500' : 'bg-gray-400'
+                    }`}
+                  />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="font-medium">{otherUser.username}</p>
+                  <p className="text-sm text-gray-500">
+                    {onlineUsers?.has(otherUser.id) ? 'Online' : 'Offline'}
+                  </p>
+                </div>
               </button>
             ))}
           </div>
@@ -56,6 +74,8 @@ function ConversationList({
               conversation.user1.id === currentUserId
                 ? conversation.user2
                 : conversation.user1;
+
+            const isUserOnline = onlineUsers?.has(otherUser.id);
 
             return (
               <button
@@ -75,15 +95,14 @@ function ConversationList({
                   />
                   <span
                     className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
-                      otherUser.status === 'online' ? 'bg-green-500' : 'bg-gray-400'
+                      isUserOnline ? 'bg-green-500' : 'bg-gray-400'
                     }`}
-                    title={otherUser.status === 'online' ? 'Online' : 'Offline'}
                   />
                 </div>
                 <div className="flex-1 text-left">
                   <p className="font-medium truncate">{otherUser.username}</p>
                   <p className="text-sm text-gray-500 truncate">
-                    {otherUser.status === 'online' ? 'Online' : 'Offline'}
+                    {isUserOnline ? 'Online' : 'Offline'}
                   </p>
                 </div>
               </button>
