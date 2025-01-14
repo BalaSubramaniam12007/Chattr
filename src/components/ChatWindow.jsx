@@ -1,4 +1,3 @@
-// ChatWindow.jsx
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "../utils/supabase";
 import { useAuth } from "../contexts/AuthContext";
@@ -10,10 +9,11 @@ function ChatWindow({ conversation, isOnline }) {
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
+  const unreadMessageRef = useRef(null); // Reference for the first unread message
   const [otherUser, setOtherUser] = useState(null);
-  
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+
+  const scrollToUnread = () => {
+    unreadMessageRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   };
 
   useEffect(() => {
@@ -24,17 +24,17 @@ function ChatWindow({ conversation, isOnline }) {
   useEffect(() => {
     const markMessagesAsRead = async () => {
       const unreadMessages = messages.filter(
-        msg => msg.sender_id !== user.id && !msg.read
+        (msg) => msg.sender_id !== user.id && !msg.read
       );
 
       if (unreadMessages.length > 0) {
         const { error } = await supabase
-          .from('messages')
+          .from("messages")
           .update({ read: true })
-          .in('id', unreadMessages.map(msg => msg.id));
+          .in("id", unreadMessages.map((msg) => msg.id));
 
         if (error) {
-          console.error('Error marking messages as read:', error);
+          console.error("Error marking messages as read:", error);
         }
       }
     };
@@ -55,16 +55,13 @@ function ChatWindow({ conversation, isOnline }) {
           filter: `conversation_id=eq.${conversation.id}`,
         },
         (payload) => {
-          if (payload.eventType === 'INSERT') {
+          if (payload.eventType === "INSERT") {
             if (payload.new.sender_id !== user.id) {
               setMessages((current) => [...current, payload.new]);
-              scrollToBottom();
             }
-          } else if (payload.eventType === 'UPDATE') {
+          } else if (payload.eventType === "UPDATE") {
             setMessages((current) =>
-              current.map((msg) =>
-                msg.id === payload.new.id ? payload.new : msg
-              )
+              current.map((msg) => (msg.id === payload.new.id ? payload.new : msg))
             );
           }
         }
@@ -86,8 +83,20 @@ function ChatWindow({ conversation, isOnline }) {
 
       if (error) throw error;
       setMessages(data || []);
+
+      // Find the first unread message for scrolling
+      const firstUnread = data?.find(
+        (msg) => msg.sender_id !== user.id && !msg.read
+      );
+
+      if (firstUnread) {
+        setTimeout(() => {
+          unreadMessageRef.current = document.getElementById(`message-${firstUnread.id}`);
+          scrollToUnread();
+        }, 0); // Delay ensures DOM is rendered
+      }
+
       setLoading(false);
-      scrollToBottom();
     } catch (error) {
       console.error("Error fetching messages:", error);
     }
@@ -103,12 +112,11 @@ function ChatWindow({ conversation, isOnline }) {
         sender_id: user.id,
         content: newMessage.trim(),
         created_at: new Date().toISOString(),
-        read: false
+        read: false,
       };
 
       setMessages((current) => [...current, newMsg]);
       setNewMessage("");
-      scrollToBottom();
 
       const { error, data } = await supabase
         .from("messages")
@@ -128,24 +136,17 @@ function ChatWindow({ conversation, isOnline }) {
     }
   };
 
-  const getAvatarUrl = (profile) => {
-    return profile?.avatar_url || "./public/cat.png";
-  };
-
   return (
     <div className="flex flex-col bg-white rounded-lg shadow h-screen">
-      {/* Header Section */}
       <div className="p-4 flex items-center justify-between border-b">
         <div className="flex items-center">
           <img
-            src={getAvatarUrl(otherUser)}
+            src={otherUser?.avatar_url || "./public/cat.png"}
             alt={otherUser?.username || "Profile"}
             className="w-12 h-12 rounded-full hover:ring-2 hover:ring-blue-500"
           />
           <div className="ml-4">
-            <h3 className="text-lg font-bold text-gray-800">
-              {otherUser?.username}
-            </h3>
+            <h3 className="text-lg font-bold text-gray-800">{otherUser?.username}</h3>
             <div className="flex items-center mt-1">
               <div
                 className={`w-2 h-2 rounded-full ${
@@ -159,26 +160,24 @@ function ChatWindow({ conversation, isOnline }) {
           </div>
         </div>
       </div>
-  
-      {/* Messages Section */}
-      <div className="flex-1 overflow-y-auto p-4" style={{ overflow: "hidden" }}>
-        <div className="relative h-full">
-          <div className="absolute inset-0 overflow-y-auto">
-            {loading ? (
-              <div className="text-center">Loading messages...</div>
-            ) : messages.length === 0 ? (
-              <div className="text-center text-gray-500">No messages yet</div>
-            ) : (
-              messages.map((message, index) => (
-                <ChatMessage key={message.id || index} message={message} />
-              ))
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-        </div>
+
+      <div className="flex-1 overflow-y-auto p-4">
+        {loading ? (
+          <div className="text-center">Loading messages...</div>
+        ) : messages.length === 0 ? (
+          <div className="text-center text-gray-500">No messages yet</div>
+        ) : (
+          messages.map((message) => (
+            <ChatMessage
+              key={message.id}
+              message={message}
+              id={`message-${message.id}`}
+            />
+          ))
+        )}
+        <div ref={messagesEndRef} />
       </div>
-  
-      {/* Input Section */}
+
       <form
         onSubmit={sendMessage}
         className="border-t p-4 bg-gray-100 sticky bottom-0 z-10"
@@ -202,7 +201,6 @@ function ChatWindow({ conversation, isOnline }) {
       </form>
     </div>
   );
-  
 }
 
 export default ChatWindow;
