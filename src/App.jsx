@@ -1,8 +1,9 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Auth from './pages/Auth';
 import Chat from './pages/Chat';
+import NotFound from './pages/NotFound'; // Create a 404 page
 
 function App() {
   return (
@@ -18,6 +19,8 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/404" element={<NotFound />} />
+          <Route path="*" element={<Navigate to="/404" replace />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
