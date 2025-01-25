@@ -179,6 +179,10 @@ function Chat() {
     );
   }
 
+  const handleBackToList = () => {
+    setActiveConversation(null);
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Desktop Header */}
@@ -224,7 +228,7 @@ function Chat() {
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex gap-4">
-          {/* UserProfilesBar - Only visible on desktop */}
+           {/* UserProfilesBar - Only visible on desktop */}
           <div className="hidden lg:block w-30 bg-white rounded-lg shadow-sm">
             <UserProfilesBar />
           </div>
@@ -239,9 +243,7 @@ function Chat() {
                 conversations={filteredConversations}
                 activeConversation={activeConversation}
                 onSelect={setActiveConversation}
-                onNewChat={() => setShowNewChat(!showNewChat)}
                 onSearch={handleSearch}
-                showNewChat={showNewChat}
                 users={users}
                 onStartNewConversation={startNewConversation}
                 currentUserId={user.id}
@@ -263,6 +265,7 @@ function Chat() {
                     ? activeConversation.user2_id 
                     : activeConversation.user1_id
                 )} 
+                onBackToList={handleBackToList}
               />
             ) : (
               <div className="h-[850px] bg-white rounded-lg shadow flex items-center justify-center">
