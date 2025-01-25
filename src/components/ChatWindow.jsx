@@ -2,29 +2,25 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "../utils/supabase";
 import { useAuth } from "../contexts/AuthContext";
 import ChatMessage from "./ChatMessage";
+import { ArrowLeft } from "lucide-react";
 
-function ChatWindow({ conversation, isOnline }) {
+function ChatWindow({ conversation, isOnline, onBackToList }) {
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
-  const unreadMessageRef = useRef(null); // Reference for the first unread message
+  const unreadMessageRef = useRef(null); // Reference for unread messages (future use)
   const [otherUser, setOtherUser] = useState(null);
-  const navigate = useNavigate();
 
-  const scrollToUnread = () => {
-    unreadMessageRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "center",
-    });
+  // Scroll to the last message
+  const scrollToLastMessage = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
     const other =
-      conversation.user1.id === user.id
-        ? conversation.user2
-        : conversation.user1;
+      conversation.user1.id === user.id ? conversation.user2 : conversation.user1;
     setOtherUser(other);
   }, [conversation, user.id]);
 
@@ -96,19 +92,10 @@ function ChatWindow({ conversation, isOnline }) {
       if (error) throw error;
       setMessages(data || []);
 
-      // Find the first unread message for scrolling
-      const firstUnread = data?.find(
-        (msg) => msg.sender_id !== user.id && !msg.read
-      );
-
-      if (firstUnread) {
-        setTimeout(() => {
-          unreadMessageRef.current = document.getElementById(
-            `message-${firstUnread.id}`
-          );
-          scrollToUnread();
-        }, 0); // Delay ensures DOM is rendered
-      }
+      // Scroll to the last message after fetching messages
+      setTimeout(() => {
+        scrollToLastMessage();
+      }, 0);
 
       setLoading(false);
     } catch (error) {
@@ -143,6 +130,9 @@ function ChatWindow({ conversation, isOnline }) {
       setMessages((current) =>
         current.map((msg) => (msg === newMsg ? data : msg))
       );
+
+      // Scroll to the last message after sending
+      scrollToLastMessage();
     } catch (error) {
       console.error("Error sending message:", error);
       setMessages((current) => current.filter((msg) => msg !== newMsg));
@@ -154,6 +144,12 @@ function ChatWindow({ conversation, isOnline }) {
     <div className="flex flex-col bg-white rounded-lg shadow h-screen">
       <div className="p-4 flex items-center justify-between border-b">
         <div className="flex items-center">
+          <button
+            onClick={onBackToList}
+            className="p-2 text-gray-500 hover:bg-gray-100 rounded-full"
+          >
+            <ArrowLeft size={24} />
+          </button>
           <img
             src={otherUser?.avatar_url || "./public/cat.png"}
             alt={otherUser?.username || "Profile"}
