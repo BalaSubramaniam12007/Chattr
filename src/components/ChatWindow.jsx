@@ -11,13 +11,20 @@ function ChatWindow({ conversation, isOnline }) {
   const messagesEndRef = useRef(null);
   const unreadMessageRef = useRef(null); // Reference for the first unread message
   const [otherUser, setOtherUser] = useState(null);
+  const navigate = useNavigate();
 
   const scrollToUnread = () => {
-    unreadMessageRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    unreadMessageRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
   };
 
   useEffect(() => {
-    const other = conversation.user1.id === user.id ? conversation.user2 : conversation.user1;
+    const other =
+      conversation.user1.id === user.id
+        ? conversation.user2
+        : conversation.user1;
     setOtherUser(other);
   }, [conversation, user.id]);
 
@@ -31,7 +38,10 @@ function ChatWindow({ conversation, isOnline }) {
         const { error } = await supabase
           .from("messages")
           .update({ read: true })
-          .in("id", unreadMessages.map((msg) => msg.id));
+          .in(
+            "id",
+            unreadMessages.map((msg) => msg.id)
+          );
 
         if (error) {
           console.error("Error marking messages as read:", error);
@@ -61,7 +71,9 @@ function ChatWindow({ conversation, isOnline }) {
             }
           } else if (payload.eventType === "UPDATE") {
             setMessages((current) =>
-              current.map((msg) => (msg.id === payload.new.id ? payload.new : msg))
+              current.map((msg) =>
+                msg.id === payload.new.id ? payload.new : msg
+              )
             );
           }
         }
@@ -91,7 +103,9 @@ function ChatWindow({ conversation, isOnline }) {
 
       if (firstUnread) {
         setTimeout(() => {
-          unreadMessageRef.current = document.getElementById(`message-${firstUnread.id}`);
+          unreadMessageRef.current = document.getElementById(
+            `message-${firstUnread.id}`
+          );
           scrollToUnread();
         }, 0); // Delay ensures DOM is rendered
       }
@@ -146,7 +160,9 @@ function ChatWindow({ conversation, isOnline }) {
             className="w-12 h-12 rounded-full hover:ring-2 hover:ring-blue-500"
           />
           <div className="ml-4">
-            <h3 className="text-lg font-bold text-gray-800">{otherUser?.username}</h3>
+            <h3 className="text-lg font-bold text-gray-800">
+              {otherUser?.username}
+            </h3>
             <div className="flex items-center mt-1">
               <div
                 className={`w-2 h-2 rounded-full ${
