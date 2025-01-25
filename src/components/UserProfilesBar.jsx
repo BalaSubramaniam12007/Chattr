@@ -34,24 +34,23 @@ const UserProfilesBar = () => {
 
   return (
     <>
-      <div className="h-full flex flex-col justify-end">
-        <div className="p-4 flex flex-col items-center">
-          <button
-            onClick={() => setIsProfileFormOpen(true)}
-            className="relative group"
-          >
-            <img
-              src={getAvatarUrl(profile)}
-              alt={profile?.username || 'Profile'}
-              className="w-12 h-12 rounded-full hover:ring-2 hover:ring-blue-500"
-            />
-            <div className="invisible group-hover:visible absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-sm rounded whitespace-nowrap">
-             Profile
-            </div>
-          </button>
-          
-        </div>
+    <div className="h-full flex lg:flex-col justify-end">
+      <div className="p-4 flex lg:flex-col items-center">
+        <button
+          onClick={() => setIsProfileFormOpen(true)}
+          className="relative group"
+        >
+          <img
+            src={getAvatarUrl(profile)}
+            alt={profile?.username || 'Profile'}
+            className="w-10 h-10 lg:w-12 lg:h-12 rounded-full hover:ring-2 hover:ring-blue-500"
+          />
+          <div className="invisible group-hover:visible absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-sm rounded whitespace-nowrap">
+            Profile
+          </div>
+        </button>
       </div>
+    </div>
       
       <ProfileFormModal 
         isOpen={isProfileFormOpen}
