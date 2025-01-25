@@ -40,8 +40,6 @@ function Chat() {
 
   const setupPresenceChannel = () => {
     const channel = supabase.channel('online_users');
-  
-    // First, define the cleanup function
     const cleanup = async () => {
       try {
         await channel.untrack();
@@ -51,7 +49,6 @@ function Chat() {
       }
     };
   
-    // Then your existing channel setup code
     channel
       .on('presence', { event: 'sync' }, () => {
         const state = channel.presenceState();
@@ -86,7 +83,6 @@ function Chat() {
       }
     });
   
-    // Add these lines at the end of setupPresenceChannel
     window.addEventListener('beforeunload', cleanup);
   
     return () => {
@@ -94,19 +90,6 @@ function Chat() {
       window.removeEventListener('beforeunload', cleanup);
     };
   };
-  
-  // Then in your useEffect, make sure to use the cleanup function:
-  useEffect(() => {
-    fetchConversations();
-    fetchUsers();
-    const cleanupPresence = setupPresenceChannel();
-  
-    return () => {
-      if (cleanupPresence) {
-        cleanupPresence();
-      }
-    };
-  }, [user]);
 
   const fetchConversations = async () => {
     try {
@@ -196,10 +179,9 @@ function Chat() {
     );
   }
 
-
   return (
-    <div className="min-h-screen bg-gray-100"> 
-    {/*Desktop header*/}
+    <div className="min-h-screen bg-gray-100">
+      {/* Desktop Header */}
       <nav className="bg-white shadow-sm hidden lg:block">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-xl font-bold">Chattr</h1>
@@ -211,31 +193,34 @@ function Chat() {
           </button>
         </div>
       </nav>
-      {/* Mobile Header */}
-      <nav className="bg-white shadow-sm lg:hidden">
-        <div className="px-4 py-4 flex justify-between items-center">
-          {activeConversation && isMobileView ? (
-            <>
-              <button
-                onClick={() => setActiveConversation(null)}
-                className="p-2 hover:bg-gray-100 rounded-lg"
-              >
-                <ArrowLeft size={24} />
-              </button>
-              <span className="font-semibold">{
-                activeConversation.user1.id === user.id 
-                  ? activeConversation.user2.username 
-                  : activeConversation.user1.username
-              }</span>
-            </>
-          ) : (
-            <>
-              <h1 className="text-xl font-bold">Chattr</h1>
-              <UserProfilesBar />
-            </>
-          )}
-        </div>
-      </nav>
+
+      {/* Mobile Header - Only shown if not in mobile view */}
+      {!isMobileView && (
+        <nav className="bg-white shadow-sm lg:hidden">
+          <div className="px-4 py-4 flex justify-between items-center">
+            {activeConversation && isMobileView ? (
+              <>
+                <button
+                  onClick={() => setActiveConversation(null)}
+                  className="p-2 hover:bg-gray-100 rounded-lg"
+                >
+                  <ArrowLeft size={24} />
+                </button>
+                <span className="font-semibold">{
+                  activeConversation.user1.id === user.id 
+                    ? activeConversation.user2.username 
+                    : activeConversation.user1.username
+                }</span>
+              </>
+            ) : (
+              <>
+                <h1 className="text-xl font-bold">Chattr</h1>
+                <UserProfilesBar />
+              </>
+            )}
+          </div>
+        </nav>
+      )}
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex gap-4">
