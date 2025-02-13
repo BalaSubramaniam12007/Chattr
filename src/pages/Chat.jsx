@@ -193,11 +193,9 @@ function Chat() {
     setActiveConversation(null);
   };
 
-  return (
-    <div
-      className={`min-h-screen ${isMobileView ? "bg-white" : "bg-gray-100"}`}
-    >
-      {/* Mobile Header - Only show when no active conversation */}
+   return (
+    <div className="h-screen flex flex-col bg-white sm:bg-gray-100">
+     {/* Mobile Header - Only show when no active conversation */}
       {isMobileView && !activeConversation && (
         <div className="bg-white relative z-10">
           <div className="flex justify-between items-center h-14 px-4">
@@ -217,7 +215,7 @@ function Chat() {
         </div>
       )}
       {/* Desktop Header */}
-      <nav className="bg-white shadow-sm hidden lg:block">
+      <nav className="bg-white shadow-sm hidden lg:block flex-shrink-0">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-xl font-bold">Chattr</h1>
           <button
@@ -229,82 +227,78 @@ function Chat() {
         </div>
       </nav>
 
-      <div
-        className={isMobileView ? "" : "max-w-7xl mx-auto px-4 py-4 lg:py-8"}
-      >
-        <div className={`flex ${isMobileView ? "" : "gap-4"}`}>
-          {/* UserProfilesBar - Only visible on desktop */}
-          <div className="hidden lg:block w-20 bg-white rounded-lg shadow-sm">
-            <UserProfilesBar />
-          </div>
+      <div className="flex-1 overflow-hidden">
+        <div className="h-full max-w-7xl mx-auto px-4 py-4 lg:py-8">
+          <div className={`flex h-full ${isMobileView ? "" : "gap-4"}`}>
+            {/* UserProfilesBar - Only visible on desktop */}
+            <div className="hidden lg:block w-20 bg-white rounded-lg shadow-sm">
+              <UserProfilesBar />
+            </div>
 
-          {/* ConversationList - Full screen on mobile when no active chat */}
-          <div
-            className={`
-  ${isMobileView ? "w-full h-screen fixed inset-0 pt-14" : "w-1/3"} 
-  ${activeConversation && isMobileView ? "hidden" : "block"}
-`}
-          >
+            {/* ConversationList */}
             <div
               className={`
-              ${
-                isMobileView
-                  ? "h-full pt-14"
-                  : "bg-white rounded-lg shadow-sm h-[850px]"
-              }
-              ${!activeConversation && isMobileView ? "-mt-14" : ""}
-            `}
+                ${isMobileView ? "w-full h-screen fixed inset-0 pt-14" : "w-1/3"} 
+                ${activeConversation && isMobileView ? "hidden" : "block"}
+              `}
             >
-              <ConversationList
-                conversations={filteredConversations}
-                activeConversation={activeConversation}
-                onSelect={setActiveConversation}
-                onSearch={handleSearch}
-                users={users}
-                onStartNewConversation={startNewConversation}
-                currentUserId={user.id}
-                onlineUsers={onlineUsers}
-              />
-            </div>
-          </div>
-
-          {/* ChatWindow - Full screen on mobile when active */}
-          <div
-            className={`
-            ${isMobileView ? "w-full h-screen fixed inset-0" : "w-2/3"}
-            ${!activeConversation && isMobileView ? "hidden" : "block"}
-          `}
-          >
-            {activeConversation ? (
-              <div
-                className={`h-full ${
-                  isMobileView ? "bg-white" : "bg-white rounded-lg shadow-sm"
-                }`}
-              >
-                <ChatWindow
-                  conversation={activeConversation}
-                  isOnline={onlineUsers.has(
-                    activeConversation.user1_id === user.id
-                      ? activeConversation.user2_id
-                      : activeConversation.user1_id
-                  )}
-                  onBackToList={handleBackToList}
-                />
-              </div>
-            ) : (
               <div
                 className={`
-                ${isMobileView ? "h-screen" : "h-[850px]"} 
-                bg-white 
-                ${isMobileView ? "" : "rounded-lg shadow"} 
-                flex items-center justify-center
-              `}
+                  ${isMobileView ? "h-full pt-14" : "bg-white rounded-lg shadow-sm h-full"}
+                  ${!activeConversation && isMobileView ? "-mt-14" : ""}
+                `}
               >
-                <p className="text-gray-500">
-                  Select a conversation or start a new one
-                </p>
+                <ConversationList
+                  conversations={filteredConversations}
+                  activeConversation={activeConversation}
+                  onSelect={setActiveConversation}
+                  onSearch={handleSearch}
+                  users={users}
+                  onStartNewConversation={startNewConversation}
+                  currentUserId={user.id}
+                  onlineUsers={onlineUsers}
+                />
               </div>
-            )}
+            </div>
+
+            {/* ChatWindow */}
+            <div
+              className={`
+                ${isMobileView ? "w-full h-screen fixed inset-0" : "w-2/3"}
+                ${!activeConversation && isMobileView ? "hidden" : "block"}
+              `}
+            >
+              {activeConversation ? (
+                <div
+                  className={`h-full ${
+                    isMobileView ? "bg-white" : "bg-white rounded-lg shadow-sm"
+                  }`}
+                >
+                  <ChatWindow
+                    conversation={activeConversation}
+                    isOnline={onlineUsers.has(
+                      activeConversation.user1_id === user.id
+                        ? activeConversation.user2_id
+                        : activeConversation.user1_id
+                    )}
+                    onBackToList={handleBackToList}
+                  />
+                </div>
+              ) : (
+                <div
+                  className={`
+                    h-full
+                    bg-white 
+                    ${isMobileView ? "" : "rounded-lg shadow"} 
+                    flex items-center justify-center
+                  `}
+                >
+                  <p className="text-gray-500">
+                    Select a conversation or start a new one
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
