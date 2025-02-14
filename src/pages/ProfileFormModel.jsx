@@ -179,35 +179,75 @@ const ProfileFormModal = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
-    <div className="bg-white rounded-2xl shadow-lg w-full max-w-3xl p-8">
-      <div className="flex justify-between items-center mb-8">
-        <h2 className="text-3xl font-semibold text-gray-800">Profile</h2>
-        <button
-          onClick={onClose}
-          className="text-gray-400 hover:text-red-500 transition duration-200"
-        >
-          <X size={24} />
-        </button>
-      </div>
-
-      {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <Loader2 className="animate-spin h-8 w-8 text-blue-500" />
+      <div className="bg-white rounded-2xl shadow-lg w-full max-w-3xl p-4 md:p-8 max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6 md:mb-8">
+          <h2 className="text-2xl md:text-3xl font-semibold text-gray-800">Profile</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-red-500 transition duration-200"
+          >
+            <X size={24} />
+          </button>
         </div>
-      ) : (
-        <>
-          {success && (
-            <div className="mb-4 flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-lg">
-              <Check className="h-4 w-4" />
-              <span>{success}</span>
-            </div>
-          )}
 
-            <div className="flex gap-10">
-              <div className="flex-1 space-y-8">
-                <div className="bg-gray-100 rounded-lg p-5 shadow-sm">
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <Loader2 className="animate-spin h-8 w-8 text-blue-500" />
+          </div>
+        ) : (
+          <>
+            {success && (
+              <div className="mb-4 flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-lg">
+                <Check className="h-4 w-4" />
+                <span>{success}</span>
+              </div>
+            )}
+
+            <div className="flex flex-col md:flex-row md:gap-10">
+              {/* Avatar Section - Moved to top on mobile */}
+              <div className="w-full md:w-72 mb-6 md:mb-0 order-1 md:order-2">
+                <div className="bg-gray-100 rounded-lg p-4 md:p-5 shadow-sm text-center">
+                  <div className="mb-5 relative">
+                    {updating && (
+                      <div className="absolute inset-0 bg-black bg-opacity-20 rounded-full flex items-center justify-center">
+                        <Loader2 className="animate-spin h-8 w-8 text-white" />
+                      </div>
+                    )}
+                    <img
+                      src={profile.avatar_url || '/default-avatar.png'}
+                      alt="Profile"
+                      className="w-28 h-28 md:w-36 md:h-36 rounded-full mx-auto shadow-md border-4 border-gray-200 object-cover"
+                    />
+                  </div>
+                  <div className="space-y-4">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      className="hidden"
+                      id="avatar-upload"
+                      disabled={updating}
+                    />
+                    <label
+                      htmlFor="avatar-upload"
+                      className={`inline-flex items-center gap-3 ${updating ? 'bg-gray-100 cursor-not-allowed' : 'bg-blue-100 hover:bg-blue-200 cursor-pointer'}
+                        text-blue-600 px-4 md:px-5 py-2 rounded-lg border border-blue-300 transition duration-200 text-sm md:text-base`}
+                    >
+                      <Upload size={18} />
+                      <span>Upload Avatar</span>
+                    </label>
+                    {errors.avatar && (
+                      <p className="text-sm text-red-500">{errors.avatar}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Form Fields Section */}
+              <div className="flex-1 space-y-6 md:space-y-8 order-2 md:order-1">
+                <div className="bg-gray-100 rounded-lg p-4 md:p-5 shadow-sm">
                   <div className="flex items-center justify-between mb-3">
-                    <label className="text-base font-medium text-gray-700">Username</label>
+                    <label className="text-sm md:text-base font-medium text-gray-700">Username</label>
                     <button
                       onClick={() => setEditField('username')}
                       className="text-gray-500 hover:text-blue-500 transition duration-200"
@@ -218,7 +258,7 @@ const ProfileFormModal = ({ isOpen, onClose }) => {
                   </div>
                   {editField === 'username' ? (
                     <div className="space-y-2">
-                      <div className="flex gap-3">
+                      <div className="flex flex-col sm:flex-row gap-3">
                         <input
                           type="text"
                           value={profile.username}
@@ -230,8 +270,8 @@ const ProfileFormModal = ({ isOpen, onClose }) => {
                         <button
                           onClick={() => updateUsername(profile.username)}
                           disabled={updating}
-                          className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-lg 
-                            hover:bg-blue-700 disabled:opacity-50 text-sm transition duration-200"
+                          className="inline-flex items-center justify-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-lg 
+                            hover:bg-blue-700 disabled:opacity-50 text-sm transition duration-200 w-full sm:w-auto"
                         >
                           {updating ? <Loader2 className="animate-spin h-4 w-4" /> : 'Save'}
                         </button>
@@ -241,13 +281,13 @@ const ProfileFormModal = ({ isOpen, onClose }) => {
                       )}
                     </div>
                   ) : (
-                    <p className="text-gray-600">{profile.username || 'No username set'}</p>
+                    <p className="text-gray-600 text-sm md:text-base">{profile.username || 'No username set'}</p>
                   )}
                 </div>
 
-                <div className="bg-gray-100 rounded-lg p-5 shadow-sm">
+                <div className="bg-gray-100 rounded-lg p-4 md:p-5 shadow-sm">
                   <div className="flex items-center justify-between mb-3">
-                    <label className="text-base font-medium text-gray-700">Bio</label>
+                    <label className="text-sm md:text-base font-medium text-gray-700">Bio</label>
                     <button
                       onClick={() => setEditField('bio')}
                       className="text-gray-500 hover:text-blue-500 transition duration-200"
@@ -267,15 +307,15 @@ const ProfileFormModal = ({ isOpen, onClose }) => {
                           placeholder="Tell us about yourself"
                           rows={4}
                         />
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-500">
+                        <div className="flex flex-col sm:flex-row justify-between items-center gap-2">
+                          <span className="text-sm text-gray-500 order-2 sm:order-1">
                             {profile.bio.length}/500 characters
                           </span>
                           <button
                             onClick={() => updateBio(profile.bio)}
                             disabled={updating}
-                            className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2 
-                              rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm transition duration-200"
+                            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-blue-600 text-white 
+                              px-5 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm transition duration-200 order-1 sm:order-2"
                           >
                             {updating ? <Loader2 className="animate-spin h-4 w-4" /> : 'Save'}
                           </button>
@@ -286,48 +326,11 @@ const ProfileFormModal = ({ isOpen, onClose }) => {
                       )}
                     </div>
                   ) : (
-                    <p className="text-gray-600">{profile.bio || 'No bio yet'}</p>
+                    <p className="text-gray-600 text-sm md:text-base">{profile.bio || 'No bio yet'}</p>
                   )}
                 </div>
               </div>
-
-              <div className="w-72">
-                <div className="bg-gray-100 rounded-lg p-5 shadow-sm text-center">
-                  <div className="mb-5 relative">
-                    {updating && (
-                      <div className="absolute inset-0 bg-black bg-opacity-20 rounded-full flex items-center justify-center">
-                        <Loader2 className="animate-spin h-8 w-8 text-white" />
-                      </div>
-                    )}
-                    <img
-                      src={profile.avatar_url || '/default-avatar.png'}
-                      alt="Profile"
-                      className="w-36 h-36 rounded-full mx-auto shadow-md border-4 border-gray-200 object-cover"
-                    />
-                  </div>
-                  <div className="space-y-4">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleAvatarUpload}
-                      className="hidden"
-                      id="avatar-upload"
-                      disabled={updating}
-                    />
-                    <label
-                      htmlFor="avatar-upload"
-                      className={`inline-flex items-center gap-3 ${updating ? 'bg-gray-100 cursor-not-allowed' : 'bg-blue-100 hover:bg-blue-200 cursor-pointer'}
-                        text-blue-600 px-5 py-2 rounded-lg border border-blue-300 transition duration-200`}
-                    >
-                      <Upload size={18} />
-                      <span>Upload Avatar</span>
-                    </label>
-                    {errors.avatar && (
-                      <p className="text-sm text-red-500">{errors.avatar}</p>
-                    )}
-                  </div>
-                </div>
-              </div>
+              
             </div>
           </>
         )}
