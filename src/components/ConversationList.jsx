@@ -14,6 +14,7 @@ function ConversationList({
   const [showNewUserSearch, setShowNewUserSearch] = useState(false);
   const [newUserSearchQuery, setNewUserSearchQuery] = useState("");
   const [conversationSearchQuery, setConversationSearchQuery] = useState("");
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
 
   // Modified filter to only match from start of username
   const filteredUsers = users.filter(
@@ -44,38 +45,55 @@ function ConversationList({
         {/* Header */}
         <div className="flex-shrink-0 p-4 flex justify-between items-center border-b">
           <h2 className="text-lg font-semibold">Conversations</h2>
-          <button
-            onClick={() => setShowNewUserSearch(true)}
-            className="p-2 text-blue-500 hover:bg-blue-50 rounded-full transition-colors"
-          >
-            <Plus size={24} />
-          </button>
+          <div className="flex items-center space-x-2">
+            {/* Search icon for mobile */}
+            <button
+              onClick={() => setShowMobileSearch(true)}
+              className="md:hidden p-2 text-gray-500 hover:bg-gray-50 rounded-full transition-colors"
+            >
+              <Search size={24} />
+            </button>
+            <button
+              onClick={() => setShowNewUserSearch(true)}
+              className="p-2 text-blue-500 hover:bg-blue-50 rounded-full transition-colors"
+            >
+              <Plus size={24} />
+            </button>
+          </div>
         </div>
 
-        {/* Search */}
-        <div className="flex-shrink-0 p-4 pb-2">
+        {/* Search - hidden on mobile unless activated */}
+        <div className={`flex-shrink-0 p-4 pb-2 ${showMobileSearch ? 'block' : 'hidden md:block'}`}>
           <div className="relative">
+            {showMobileSearch && (
+              <button
+                onClick={() => setShowMobileSearch(false)}
+                className="md:hidden absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              >
+                <ArrowLeft size={20} />
+              </button>
+            )}
             <Search
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              className={`absolute ${showMobileSearch ? 'left-10 md:left-3' : 'left-3'} top-1/2 transform -translate-y-1/2 text-gray-400`}
               size={20}
             />
             <input
               type="text"
               placeholder="Search conversations..."
-              className="w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full ${showMobileSearch ? 'pl-16 md:pl-10' : 'pl-10'} pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500`}
               onChange={(e) => {
                 setConversationSearchQuery(e.target.value);
                 onSearch(e.target.value);
               }}
+              autoFocus={showMobileSearch}
             />
           </div>
         </div>
-        
+
         {/* Conversation List */}
         <div className="flex-1 overflow-y-auto p-4 pt-2">
           <div className="space-y-2">
             {conversationSearchQuery ? (
-              // Show filtered conversations when searching
               filteredConversations.length > 0 ? (
                 filteredConversations.map((conversation) => {
                   const otherUser =
@@ -107,9 +125,7 @@ function ConversationList({
                         />
                       </div>
                       <div className="flex-1 text-left">
-                        <p className="font-medium truncate">
-                          {otherUser.username}
-                        </p>
+                        <p className="font-medium truncate">{otherUser.username}</p>
                         <p className="text-sm text-gray-500 truncate">
                           {isUserOnline ? "Online" : "Offline"}
                         </p>
@@ -122,8 +138,7 @@ function ConversationList({
                   No conversations found
                 </p>
               )
-            ) : // Show all conversations when not searching
-            conversations.length > 0 ? (
+            ) : conversations.length > 0 ? (
               conversations.map((conversation) => {
                 const otherUser =
                   conversation.user1.id === currentUserId
@@ -154,9 +169,7 @@ function ConversationList({
                       />
                     </div>
                     <div className="flex-1 text-left">
-                      <p className="font-medium truncate">
-                        {otherUser.username}
-                      </p>
+                      <p className="font-medium truncate">{otherUser.username}</p>
                       <p className="text-sm text-gray-500 truncate">
                         {isUserOnline ? "Online" : "Offline"}
                       </p>
@@ -173,7 +186,7 @@ function ConversationList({
         </div>
       </div>
 
-      {/* User search view */}
+      {/* User search view - rest of the code remains the same */}
       <div
         className={`absolute inset-0 flex flex-col bg-white transition-transform duration-300 transform ${
           showNewUserSearch ? "translate-x-0" : "-translate-x-full"
