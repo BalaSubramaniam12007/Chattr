@@ -246,13 +246,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - **Voice Messages**: Record and send voice messages
 
 
-## 🙏 Acknowledgments
-
-- [Supabase](https://supabase.com/) for the backend infrastructure
-- [Tailwind CSS](https://tailwindcss.com/) for styling
-- [Lucide React](https://lucide.dev/) for icons
-- [React](https://reactjs.org/) for the frontend framework
-
 ## Contributors  
 
 <a href="https://github.com/BalaSubramaniam12007">
